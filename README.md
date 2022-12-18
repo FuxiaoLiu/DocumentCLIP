@@ -1,4 +1,5 @@
 # DocumentCLIP: Linking Figures and Main Body Text in Reflowed Documents
+Fuxiao Liu, Chris Tensmeyer, Hao Tan
 
 In this work, we apply the contrastive learning algorithm to determine the document-internal connections between specific figures and body Text. Our model can be applied to Adobe Liquid mode to improve the reading experience on the smartphone.
 
@@ -51,4 +52,10 @@ a job on a node of 4 GPUs:
     
 torchrun --nproc_per_node=4 --rdzv_endpoint=$HOSTE_NODE_ADDR -m training1.main \ --train-data="./data/validation_wiki.csv"      --val-data="./data/validation_wiki.csv"   --warmup 10000     --batch-size=64    --lr=0.001   --wd=0.1     --epochs=30     --workers=4
 ```
+#### Inference
+The checkpoint of our model will be shared upon request.
 
+## Notice
+This repository and tool are licensed under [Apache 2.0](./LICENSE). 
+
+<a name="footnote1">1</a>: Wikimedia Wordmark is a trademark of the Wikimedia Foundation and is used with the permission of the Wikimedia Foundation. We are not endorsed by or affiliated with the Wikimedia Foundation.
