@@ -32,11 +32,5 @@ ${ARTICLE_NAME}/
         |-- removed.json : modified parts from the original text
 ``` 
 
-If you want to access the original articles, the link can be found in the `url` attribute of the `<doc>` tag in the `doc.xml` file. 
 
-```<doc id="12" title="Anarchism" url="https://en.wikipedia.org/wiki?curid=12">```
-
-Also, the original images can be accessed at `https://en.wikipedia.org/wiki/${IMAGE_FILE}`, where `${IMAGE_FILE}` is a value of the `name` attribute of the `<image>` tag in the `doc.xml` file. 
-
-```<image id="0" name="File:Paolo Monti - Servizio fotografico (Napoli, 1969) - BEIC 6353768.jpg">`
 
