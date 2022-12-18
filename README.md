@@ -4,17 +4,11 @@ Model Preview:
 ![DocumentCLIP Model!](./model.png)
 
 ## Requirements
-- `pip install -r requirements.txt`
+Clone this repo and build the environment
 
-    We tested our tool in the following packages.
 ```
-    Python==3.7.0
-    pip==20.0.1
-    beautifulsoup4==4.8.2
-    gensim==3.7.0
-    numpy==1.14.2
-    Pillow==7.0.0
-    requests==2.22.0
+conda env create -f DCLIP.yml --name DCLIP
+conda activate DCLIP
 ```
 
 - Download the latest Wikipedia<sup>[1](#footnote1)</sup> dump `enwiki-*-pages-articles.xml.bz2` from https://dumps.wikimedia.org/backup-index.html.
