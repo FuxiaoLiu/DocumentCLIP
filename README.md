@@ -53,7 +53,7 @@ a job on a node of 4 GPUs:
 torchrun --nproc_per_node=4 --rdzv_endpoint=$HOSTE_NODE_ADDR -m training1.main \ --train-data="./data/validation_wiki.csv"      --val-data="./data/validation_wiki.csv"   --warmup 10000     --batch-size=64    --lr=0.001   --wd=0.1     --epochs=30     --workers=4
 ```
 #### Inference
-The checkpoint of our model will be shared upon request.
+The checkpoint of our model will be shared upon request. please email: fl3es@umd.edu.
 
 ## Notice
 This repository and tool are licensed under [Apache 2.0](./LICENSE). 
