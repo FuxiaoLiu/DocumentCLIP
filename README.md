@@ -18,7 +18,7 @@ conda activate DCLIP
 
 - Download the latest Wikipedia<sup>[1](#footnote1)</sup> dump `enwiki-*-pages-articles.xml.bz2` from https://dumps.wikimedia.org/backup-index.html.
 
-## Data Preprocess
+### Data Preprocess
 Follow the instruction in [preprocess.txt](./Data/instruction.txt)
 
 The final output of this tool is a collection of Wikipedia articles, which are separated by directories, i.e., one directory per one article. The structure in each directory is below:
@@ -32,6 +32,9 @@ ${ARTICLE_NAME}/
         |-- *.license : license information of images
         |-- removed.json : modified parts from the original text
 ``` 
+
+### Statistic of Our Dataset
+![DocumentCLIP dataset!](./statistic.png)
 
 ## Model Running
 
