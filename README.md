@@ -20,7 +20,7 @@ conda activate DCLIP
     This tool takes a Wikipedia dump as an input. You can run the tool on your own responsibility. By using our tool, you agree to [Wikimedia's Terms of Use](https://foundation.wikimedia.org/wiki/Terms_of_Use/en), [Reusers' rights and obligations](https://en.wikipedia.org/wiki/Wikipedia:Copyrights#Reusers.27_rights_and_obligations), [Reusing Wikipedia content page](https://en.wikipedia.org/wiki/Wikipedia:Reusing_Wikipedia_content), and [Reusing Wikimedia Commons content page](https://commons.wikimedia.org/wiki/Commons:Reusing_content_outside_Wikimedia).
 
 ## Data Preprocess
-Follow the instruction in [preprocess.txt](./instruction.txt)
+Follow the instruction in [preprocess.txt](./data/instruction.txt)
 
 The final output of this tool is a collection of Wikipedia articles, which are separated by directories, i.e., one directory per one article. The structure in each directory is below:
 
