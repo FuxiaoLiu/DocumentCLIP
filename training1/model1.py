@@ -228,10 +228,7 @@ class Attention(nn.Module):
         if mask_need == 0:
             att = att
             alpha = self.softmax(att)
-        # alpha = alpha * mask
-        # print(encoder_out.size())
-        # print(alpha.unsqueeze(2).size(), att.size())
-        # print(mask)
+
         attention_weighted_encoding = (encoder_out * alpha.unsqueeze(2)).sum(dim=1)
         return attention_weighted_encoding, alpha
 
@@ -254,6 +251,7 @@ class Gated_Embedding_Unit(nn.Module):
 
 
 # ============================================================
+# the main function
 class Fuxiao(nn.Module):
     def __init__(self, input_size, output_size):
         super().__init__()
@@ -310,9 +308,6 @@ class Fuxiao(nn.Module):
         mask_fus = torch.cat([mask_i_c_tmp, mask_image, mask_caption], dim=1).unsqueeze(1).unsqueeze(1)
         caption_features1, _ = self.encoder4(caption_features_tmp, caption_features_tmp, mask_fus, 0)
         caption_features= caption_features1[:, 0, :]
-
-
-
 
 
         # caption_features = torch.cat([caption_features, image_features], dim=-1)
@@ -377,7 +372,7 @@ class Fuxiao(nn.Module):
         # pos_image_embed,_ = self.lstm1(pos_image_embed)
         # new embed
         #image_features = image_features + image_type_embed + pos_image_embed
-        # image_features = img_set_features1 + image_type_embed  + pos_image_embed
+        #image_features = img_set_features1 + image_type_embed  + pos_image_embed
         #caption_features = caption_features + caption_type_embed + pos_image_embed
         #text_features = text_features + section_type_embed + pos_text_embed + count_list1_embedding + count_list1_embedding1
         caption_features = caption_features + caption_type_embed + pos_image_embed
