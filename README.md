@@ -2,6 +2,6 @@
 
 # Model Preview:
 
-![DocumentCLIP Model!](./model_new.pdf)
+![DocumentCLIP Model!](./model.png)
 
 
