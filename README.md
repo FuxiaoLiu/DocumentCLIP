@@ -32,5 +32,13 @@ ${ARTICLE_NAME}/
         |-- removed.json : modified parts from the original text
 ``` 
 
+## Model Running
 
+### Sample single-process running code:
+```bash
+CUDA_VISIBLE_DEVICES=0 python -m training1.main     --save-frequency 1     --zeroshot-frequency 1     --report-to tensorboard     --train-data="./data/validation_wiki.csv"      --val-data="./data/validation_wiki.csv"      --csv-img-key filepath     --csv-caption-key title     --warmup 10000     --batch-size=32     --lr=0.001    --wd=0.1     --epochs=30     --workers=8
+```
+
+Note: `imagenet-val` is the path to the *validation* set of ImageNet for zero-shot evaluation, not the training set!
+You can remove this argument if you do not want to perform zero-shot evaluation on ImageNet throughout training. Note that the `val` folder should contain subfolders. If it doest not, please use [this script](https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh).
 
