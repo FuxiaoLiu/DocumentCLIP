@@ -1,0 +1,105 @@
+# 1. Extract Wikipedia articles from a Wikipedia dump.
+#    This stores article information as doc.xml in a directory per article.
+# Args:
+#   ${WIKI_DUMP_FILE} : path to Wikipedia dump file
+#   ${ART_DIR_ROOT}   : root directory for the output (default: ./articles)
+python extract_articles.py ${WIKI_DUMP_FILE} --out_dir ${ART_DIR_ROOT}
+
+# 2. Remove PI.
+#    This removes personal information based on internal links and
+#    corresponding Wikipedia's categories.
+#    Aside from the proposed task, the tool removes some contents
+#    (e.g., sentences and images) that are relevant to personal information
+#    to reduce the risk of privacy infringement. To detect personal
+#    information, the tool examines expressions that have internal links
+#    to other Wikipedia articles and removes the contents if the categories
+#    of the linked article are related to individuals. The removed parts are
+#    stored in `removed.json`.
+# Args:
+#   ${ART_DIR_ROOT} : root directory for the articles (default: ./articles)
+python remove_pi.py ${ART_DIR_ROOT}
+
+# 3. Filter out articles that do not meet criteria for our task.
+#    The criteria is (1) the number of sections is between 10 and 50,
+#    and (2) the number of images is between 2 and 30.
+# Args:
+#   ${ART_DIR_ROOT}    : root directory for the articles (default: ./articles)
+#   ${REMAIN_ART_LIST} : output text file path that stores article names
+#       that met the criteria (default: ./target_articles.txt)
+python filter_articles.py -d ${ART_DIR_ROOT} -minsec 10 -maxsec 50 -minimg 2 -maximg 30 -mixlen 10000 -o ${REMAIN_ART_LIST}
+
+# 4. Create a directory for the target articles
+mkdir target_articles
+cd target_articles
+
+# 5. Create symbolic links to the target articles in the directory
+cat ../target_articles_list.txt | sed "s/\'/\\\'/g" | xargs -I{} ln -s "../${ART_DIR_ROOT}/{}" "{}"
+cd ..
+
+# 6. Download images
+# Download only images that have permission to use in the license.
+# This will take a long long time (several months for processing the whole articles in English wikipedia)
+# When your process stops before finished, you can restart it with the same command. The script skips the articles that has images already.
+python donwload_images.py -d target_articles
+
+# The download script outputs a list of articles (success_image_download_articles_list.txt) that was a list of directories succeeded to download all the images.
+
+# 7. Filter out the articles not in the list
+mkdir target_articles_image_download_success
+cd target_articles_image_download_success
+cat ../success_image_download_articles_list.txt | sed "s/\'/\\\'/g" | xargs -I{} ln -s "../${ART_DIR_ROOT}/{}" "{}"
+cd ..
+
+# 8. Copy the articles
+# I recommend you to copy the articles to another directory (not symbolic link) and to process the copy after this point
+# because we will do unrecoverable modifications from now
+mkdir target_articles_main
+cd target_articles_main
+ls ../target_articles_image_download_success | sed "s/\'/\\\'/g" | xargs -I{} cp -r "../${ART_DIR_ROOT}/{}" .
+cd ..
+
+# 9. Apply patches to the articles
+# Some of patches filter out invalid articles and provide a list of them with a file named by ${PATCH_NUMBER}-failed.txt
+# After applying patches, you need to remove the articles in the list by using `python move.py ${PATCH_NUMER}-failed.txt ./trash`
+# Let's make the trash directory first
+mkdir trash
+
+# Patch 1: Double check if the articles have images correctly, and rename image names with id
+## old: 0-File:Achilles fighting against Memnon Leiden Rijksmuseum voor Oudheden.jpg
+## new: 0.jpg
+python 1-patch-filter-articles-and-rename-image.py target_articles_main
+python move.py 1-failed.txt ./trash
+
+# Patch 2: Shrink a image size
+python 2-patch-image-shrink.py ./target_articles_main
+python move.py 2-failed.txt ./trash
+
+# Patch 3: Remove html files for each image (I think this won't fail for any articles)
+python 3-patch-soup-remove.py ./target_articles_main
+
+# Patch 4: Convert xml to more useful json format
+## This script create `doc.json` for each article
+python 4-patch-convert-to-json.py ./target_articles_main
+python move.py 4-failed.txt ./trash
+
+# Patch 5: Rename article names that start with "."
+python 5-patch-rename-hidden-file.py ./target_articles_main
+
+# Patch 6: Convert each image into RGB
+## Converting RGB is processed in the second patch, but for making sure it is.
+python 6-patch-convert-rgb.py ./target_articles_main
+
+# Patch 7: Validate again from several points (number of images, number of sections ...)
+python 7-patch-validate.py target_articles_main
+python move.py 7-failed.txt ./trash
+
+# Patch 8: Remove unnecessary files
+# I.e., *.org.*, category.txt, interlinks.json, raw_text.txt, meta.json
+pythn 8-patch-remove-unnecessary-files.py target_articles_main
+
+# Patch 9: Move miscellaneous files to info/
+# I.e., *.license, removed.json
+python 9-patch-move-misc-files.py target_articles_main
+
+# 10. Get some statistics.
+pyhton stats.py target_articles_main
