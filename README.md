@@ -1,4 +1,7 @@
 # DocumentCLIP: Linking Figures and Main Body Text in Reflowed Documents
 
-# Model
+# Model Preview:
+
+![DocumentCLIP Model!](./model_new.pdf)
+
 
