@@ -40,5 +40,15 @@ CUDA_VISIBLE_DEVICES=0 python -m training1.main     --save-frequency 1     --zer
 ```
 
 Note: `imagenet-val` is the path to the *validation* set of ImageNet for zero-shot evaluation, not the training set!
-You can remove this argument if you do not want to perform zero-shot evaluation on ImageNet throughout training. Note that the `val` folder should contain subfolders. If it doest not, please use [this script](https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh).
+You can remove this argument if you do not want to perform zero-shot evaluation on ImageNet throughout training. 
+
+#### Multi-GPU with Single-Node
+
+We make use of `torchrun` to launch distributed jobs. The following launches a
+a job on a node of 4 GPUs:
+
+```bash
+    
+torchrun --nproc_per_node=4 --rdzv_endpoint=$HOSTE_NODE_ADDR -m training1.main \ --train-data="./data/validation_wiki.csv"      --val-data="./data/validation_wiki.csv"   --warmup 10000     --batch-size=64    --lr=0.001   --wd=0.1     --epochs=30     --workers=4
+```
 
