@@ -1,5 +1,7 @@
 # DocumentCLIP: Linking Figures and Main Body Text in Reflowed Documents
 
+In this work, we apply the contrastive learning algorithm to determine the document-internal connections between specific figures and body Text. Our model can be applied to Adobe Liquid mode to improve the reading experience on the smartphone.
+
 Model Preview:
 ![DocumentCLIP Model!](./model.png)
 
@@ -10,6 +12,8 @@ Clone this repo and build the environment
 conda env create -f DCLIP.yml --name DCLIP
 conda activate DCLIP
 ```
+
+## Data
 
 - Download the latest Wikipedia<sup>[1](#footnote1)</sup> dump `enwiki-*-pages-articles.xml.bz2` from https://dumps.wikimedia.org/backup-index.html.
 
