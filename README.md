@@ -21,9 +21,6 @@ conda activate DCLIP
 
 ## Data Preprocess
 Follow the instruction in [preprocess.txt](./Data/instruction.txt)
-
-The final output of this tool is a collection of Wikipedia articles, which are separated by directories, i.e., one directory per one article. The structure in each directory is below:
-
 ```
 ${ARTICLE_NAME}/
   |-- doc.xml : an article text marked with section and image position information
