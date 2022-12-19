@@ -204,35 +204,6 @@ class PositionwiseFeedforwardLayer(nn.Module):
         return x
 
 
-class Attention(nn.Module):
-    def __init__(self, encoder_dim, decoder_dim, attention_dim):
-        super(Attention, self).__init__()
-        self.encoder_att = nn.Linear(encoder_dim, attention_dim)
-        self.decoder_att = nn.Linear(decoder_dim, attention_dim)
-        # self.decoder_att1 = nn.Linear(decoder_dim, attention_dim)
-        self.full_att = nn.Linear(attention_dim, 1)
-        self.relu = nn.ReLU()
-        self.tanh = nn.Tanh()
-        self.softmax = nn.Softmax(dim=1)
-        self.dropout = nn.Dropout(p=0.3)
-
-    def forward(self, encoder_out, mask, decoder_hidden, mask_need):
-        att1 = self.encoder_att(encoder_out)
-        att2 = self.decoder_att(decoder_hidden)
-
-        att = self.full_att(self.relu(att1 * att2.unsqueeze(1))).squeeze(2)
-        if mask_need == 1:
-            att = att * mask
-            alpha = self.softmax(att) * mask
-
-        if mask_need == 0:
-            att = att
-            alpha = self.softmax(att)
-
-        attention_weighted_encoding = (encoder_out * alpha.unsqueeze(2)).sum(dim=1)
-        return attention_weighted_encoding, alpha
-
-
 class Gated_Embedding_Unit(nn.Module):
     def __init__(self, input_dimension, output_dimension, gating=True):
         super(Gated_Embedding_Unit, self).__init__()
@@ -267,10 +238,11 @@ class Fuxiao(nn.Module):
         self.sigmoid = nn.Sigmoid()
         self.softmax = nn.Softmax(dim=1)
         self.encoder1 = Encoder(512, 512, 1, 8, 512, 0.1)
-        self.encoder2 = Encoder(512, 512, 1, 8, 512, 0.1)
-        self.encoder3 = Encoder(512, 512, 1, 8, 512, 0.1)
-        self.encoder4 = Encoder(512, 512, 1, 8, 512, 0.1)
-        self.encoder5 = Encoder(512, 512, 1, 8, 512, 0.1)
+        self.encoder_image = Encoder(512, 512, 1, 8, 512, 0.1)
+        self.encoder_caption = Encoder(512, 512, 1, 8, 512, 0.1)
+        self.encoder_earlyfusion = Encoder(512, 512, 1, 8, 512, 0.1)
+        self.encoder_sentence = Encoder(512, 512, 1, 8, 512, 0.1)
+        self.layout_transformer = Encoder(512, 512, 1, 8, 512, 0.1)
         # self.lstm = nn.LSTM(512, 512, batch_first=True, bidirectional=True)
         self.lstm = nn.LSTM(512, 512, batch_first=True, bidirectional=False, dropout=0.1)
         self.lstm1 = nn.LSTM(512, 512, batch_first=True, bidirectional=False, dropout=0.1)
@@ -282,23 +254,20 @@ class Fuxiao(nn.Module):
         self.count_embedding1 = nn.Embedding(16, 512)
         self.cos = nn.CosineSimilarity(dim=1, eps=1e-6)
 
-        # self.encoder_layer = nn.TransformerEncoderLayer(d_model=512, nhead=8)
-        # self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=1)
 
-    def forward(self, image_features, caption_features, caption_g_features, text_features1, text_features2, text_features3, count_list1, max_score1, secid, imageid,
-                mask_section, logit_scale):
-        # image patches
-        # print(count_list1.size())
-        #print(text_features1.size(), text_features2.size(), text_features3.size())
+    def forward(self, image_features, caption_features, section_sen1, section_sen2, section_sen3, count_list_entity, max_score_clip, secid, imageid, mask_section, logit_scale):
+        
+        # Encode Image from patches
+        mask_image = torch.ones(image_features.size()[0], 50).float().to(device).unsqueeze(1).unsqueeze(1)
+        image_features, _ = self.encoder_image(image_features, image_features, mask_image, 0)
+        
+        
+        # Encode Caption from tokens
+        mask_caption = torch.ones(image_features.size()[0], 77).float().to(device).unsqueeze(1).unsqueeze(1)
+        caption_features, _ = self.encoder_caption(caption_features, caption_features, mask_caption, 0)
 
-        #print(caption_features.size(), caption_g_features.size())
-
-        mask_image1 = torch.ones(image_features.size()[0], 50).float().to(device).unsqueeze(1).unsqueeze(1)
-        image_features, _ = self.encoder2(image_features, image_features, mask_image1, 0)
-        mask_caption1 = torch.ones(image_features.size()[0], 77).float().to(device).unsqueeze(1).unsqueeze(1)
-        caption_features, _ = self.encoder3(caption_features, caption_features, mask_caption1, 0)
-        #caption_g_features, _ = self.encoder3(caption_g_features, caption_g_features, mask_caption1, 0)
-
+        
+        # early fusion of image and caption
         mask_image = torch.ones(image_features.size()[0], 50).float().to(device)
         mask_caption = torch.ones(image_features.size()[0], 77).float().to(device)
         fusion_feature = torch.zeros(image_features.size()[0], 1).long().to(device)
@@ -306,52 +275,43 @@ class Fuxiao(nn.Module):
         caption_features_tmp = torch.cat([fusion_feature, image_features, caption_features], dim=1)
         mask_i_c_tmp = torch.ones(mask_section.size()[0], 1).float().to(device)
         mask_fus = torch.cat([mask_i_c_tmp, mask_image, mask_caption], dim=1).unsqueeze(1).unsqueeze(1)
-        caption_features1, _ = self.encoder4(caption_features_tmp, caption_features_tmp, mask_fus, 0)
-        caption_features= caption_features1[:, 0, :]
+        IC_features, _ = self.encoder_earlyfusion(caption_features_tmp, caption_features_tmp, mask_fus, 0)
+        IC_features= IC_features[:, 0, :]
 
-
-        # caption_features = torch.cat([caption_features, image_features], dim=-1)
-        # caption_features = self.dropout(self.relu(self.line2(caption_features)))
 
         batch_size = image_features.size(0)
-        text_features1_new11 = []
-        text_features1_new22 = []
-        text_features1_new33 = []
+        sec_sen1_features_list = []
+        sec_sen2_features_list = []
+        sec_sen3_features_list = []
 
-        # all the text and images are using patches and tokens level
+        # section sentence encoding
+        batch_size = caption_features.size(0)
         for i in range(batch_size):
-            mask_caption = torch.ones(15, 77).float().to(device).unsqueeze(1).unsqueeze(1)
-            text_features1_tmp1, _ = self.encoder3(text_features1[i, :, :], text_features1[i, :, :], mask_caption, 0)
-            text_features1_tmp1 = text_features1_tmp1[:, -1, :]
+            mask_sen = torch.ones(15, 77).float().to(device).unsqueeze(1).unsqueeze(1)
+            sec_features1, _ = self.encoder_sentence(section_sen1[i, :, :], section_sen1[i, :, :], mask_sen, 0)
 
-            text_features1_tmp2, _ = self.encoder3(text_features2[i, :, :], text_features2[i, :, :], mask_caption, 0)
-            text_features1_tmp2 = text_features1_tmp2[:, -1, :]
+            sec_features2, _ = self.encoder_sentence(section_sen2[i, :, :], section_sen2[i, :, :], mask_sen, 0)
 
-            text_features1_tmp3, _ = self.encoder3(text_features3[i, :, :], text_features3[i, :, :], mask_caption, 0)
-            text_features1_tmp3 = text_features1_tmp3[:, -1, :]
+            sec_features3, _ = self.encoder_sentence(section_sen3[i, :, :], section_sen3[i, :, :], mask_sen, 0)
 
-            #text_features1_tmp = torch.cat([text_features1_tmp1, text_features1_tmp2, text_features1_tmp3], dim=-1)
-           # text_features1_tmp = self.dropout(self.relu(self.line4(text_features1_tmp)))
+            sec_sen1_features_list.append(sec_features1[:, -1, :].unsqueeze(0))
+            sec_sen2_features_list.append(sec_features2[:, -1, :].unsqueeze(0))
+            sec_sen3_features_list.append(sec_features3[:, -1, :].unsqueeze(0))
 
-            text_features1_new11.append(text_features1_tmp1.unsqueeze(0))
-            text_features1_new22.append(text_features1_tmp2.unsqueeze(0))
-            text_features1_new33.append(text_features1_tmp3.unsqueeze(0))
+        sec_sen1_features = torch.cat(sec_sen1_features_list, dim=0)
+        sec_sen2_features = torch.cat(sec_sen2_features_list, dim=0)
+        sec_sen3_features = torch.cat(sec_sen3_features_list, dim=0)
 
-        text_features1 = torch.cat(text_features1_new11, dim=0)
-        text_features2 = torch.cat(text_features1_new22, dim=0)
-        text_features3 = torch.cat(text_features1_new33, dim=0)
 
-        #text_features = text_features1
+        
+        # The following is discussing position, segment and entity embeddings for the layout transformer
+        # entity sorting embedding
+        entity_sorting_embedding = self.count_embedding(count_list_entity)
+        
+        # clip feature sorting embedding
+        clip_sorting_embedding = self.count_embedding(max_score_clip)
 
-        # This is for the mask
-        mask_i_c = torch.ones(mask_section.size()[0], 1).float().to(device)
-        mask = torch.cat([mask_i_c, mask_section, mask_section, mask_section], dim=1).unsqueeze(1).unsqueeze(1)
-
-        # self.count_embedding
-        count_list1_embedding = self.count_embedding(count_list1)
-        count_list1_embedding1 = self.count_embedding(max_score1)
-
-        ###Type Embedding
+        # Segment Embedding
         image_type = torch.zeros(image_features.size()[0]).long().to(device)
         image_type_embed = self.type_embedding(image_type)
         caption_type = torch.ones(caption_features.size()[0]).long().to(device)
@@ -359,119 +319,78 @@ class Fuxiao(nn.Module):
         section_type = 2 * torch.ones(text_features1.size()[0], text_features1.size()[1]).long().to(device)
         section_type_embed = self.type_embedding(section_type)
 
-        ##Position Embedding
-        batch_size = text_features1.size(0)
-        pos_text_embed = self.pos_embedding(
-            torch.arange(0, text_features1.size(1)).unsqueeze(0).repeat(batch_size, 1).to(device))
-        pos_text_embed, _ = self.lstm(pos_text_embed)
+        # Section position Embedding
+        pos_section_embed = self.pos_embedding(torch.arange(0, sec_sen1_features.size(1)).unsqueeze(0).repeat(batch_size, 1).to(device))
+        pos_section_embed, _ = self.lstm(pos_section_embed)
 
+        # Image/caption position Embedding
         secid = secid.long()
         imageid = imageid.long()
-        # pos_image_embed = self.pos_embedding(torch.arange(0, img_set_features1.size(1)).unsqueeze(0).repeat(batch_size, 1).to(device))
         pos_image_embed = self.pos_embedding(imageid).to(device)
-        # pos_image_embed,_ = self.lstm1(pos_image_embed)
-        # new embed
-        #image_features = image_features + image_type_embed + pos_image_embed
-        #image_features = img_set_features1 + image_type_embed  + pos_image_embed
-        #caption_features = caption_features + caption_type_embed + pos_image_embed
-        #text_features = text_features + section_type_embed + pos_text_embed + count_list1_embedding + count_list1_embedding1
-        caption_features = caption_features + caption_type_embed + pos_image_embed
-        text_features1 = text_features1 + section_type_embed + pos_text_embed + count_list1_embedding + count_list1_embedding1
-        text_features2 = text_features2 + section_type_embed + pos_text_embed + count_list1_embedding + count_list1_embedding1
-        text_features3 = text_features3 + section_type_embed + pos_text_embed + count_list1_embedding + count_list1_embedding1
-        # text_features = text_features + section_type_embed + pos_text_embed
+        pos_caption_embed = pos_image_embed
+        
+    
+        # Aggregation of the position embedding, segment embedding, entity embedding before the layout transformer
 
-        features = torch.cat([caption_features.unsqueeze(1), text_features1, text_features2, text_features3], dim=1)
-        # features = torch.cat([caption_features.unsqueeze(1), text_features], dim=1)
-        features_new, _ = self.encoder1(features, features, mask, 0)
+        IC_features = IC_features + caption_type_embed + pos_caption_embed
+        sec_sen1_features = sec_sen1_features + section_type_embed + pos_section_embed + entity_sorting_embedding + clip_sorting_embedding
+        sec_sen2_features = sec_sen2_features + section_type_embed + pos_section_embed + entity_sorting_embedding + clip_sorting_embedding
+        sec_sen3_features = sec_sen3_features + section_type_embed + pos_section_embed + entity_sorting_embedding + clip_sorting_embedding
+        
+        # sec_sen1_features, sec_sen2_features, sec_sen3_features are the top3 candidates from each section
 
-        #image_features1 = features_new[:, :1, :]
-        caption_features1 = features_new[:, :1, :]
-        text_features1 = features_new[:, 1:16, :]
-        text_features2 = features_new[:, 16:31, :]
-        text_features3 = features_new[:, 31:, :]
-        # image_features1 = features_new[:, :1, :]
-        # caption_features1 = features_new[:, :1, :]
-        # text_features1 = features_new[:, 1:, :]
-        #text_features1 = self.dropout(self.relu(self.line5(torch.cat([text_features1, text_features2, text_features3], dim=-1))))
+        
+        # mask
+        mask_i_c = torch.ones(mask_section.size()[0], 1).float().to(device)
+        mask = torch.cat([mask_i_c, mask_section, mask_section, mask_section], dim=1).unsqueeze(1).unsqueeze(1)
+        
+        features_fuse = torch.cat([IC_features.unsqueeze(1), sec_sen1_features, sec_sen2_features, sec_sen3_features], dim=1)
+        features_contextual, _ = self.layout_transformer(features_fuse, features_fuse, mask, 0)
+        
+        # Contextual Embeddings after layout transformer
+        contextual_IC_feature = features_contextual[:, :1, :]
+        contextual_sen1ofsection_feature = features_contextual[:, 1:16, :]
+        contextual_sen2ofsection_feature = features_contextual[:, 16:31, :]
+        contextual_sen3ofsection_feature = features_contextual[:, 31:, :]
 
-        # calculate the similarity score
-        batch_size = text_features1.size(0)
-        score_list = []
-        total_loss = 0
-        metrics1, metrics3 = 0, 0
-        num_of_image = 0
-        article_acc = []
-        labels = secid
 
-        logits_per_image1_new = []
+        # calculate the cosine similarity score between image/caption pairs with each sentence in the section
+        Cos_score_list= []
         for i in range(batch_size):
-            #tmp1 = logit_scale * image_features1[i, :, :] @ text_features1[i, :, :].T
-            tmp2 = logit_scale * caption_features1[i, :, :] @ text_features1[i, :, :].T
-
-            #tmp11 = logit_scale * image_features1[i, :, :] @ text_features2[i, :, :].T
-            tmp21 = logit_scale * caption_features1[i, :, :] @ text_features2[i, :, :].T
-
-            #tmp12 = logit_scale * image_features1[i, :, :] @ text_features3[i, :, :].T
-            tmp22 = logit_scale * caption_features1[i, :, :] @ text_features3[i, :, :].T
-            # tmp1 = self.cos(image_features1[i, :, :],text_features1[i, :, :])
-            # tmp2 = self.cos(caption_features1[i, :, :], text_features1[i, :, :])
-            '''
-            caption_features_hard1 = torch.cat([caption_features1[:i, :, :], caption_features1[i+1:, :, :]], dim=0).squeeze(1)
-            text_feature_hard1 = text_features1[i, labels[i], :].unsqueeze(0)
-            hard_neg_cap1 = logit_scale * text_feature_hard1 @ caption_features_hard1.T
-            hard_neg_img1 = (logit_scale * text_feature_hard1 @ image_features1[i, :, :].T).repeat(1, 31)
-
-            img_features_hard1 = torch.cat([image_features1[:i, :, :], image_features1[i+1:, :, :]], dim=0).squeeze(1)
-            hard_neg_cap2 = (logit_scale * text_feature_hard1 @ caption_features1[i, :, :].T).repeat(1, 31)
-            hard_neg_img2 = logit_scale * text_feature_hard1 @ img_features_hard1.T
-            '''
+            cos_score1 = logit_scale * contextual_IC_feature[i, :, :] @ contextual_sen1ofsection_feature[i, :, :].T
+            cos_score2 = logit_scale * contextual_IC_feature[i, :, :] @ contextual_sen2ofsection_feature[i, :, :].T
+            cos_score3 = logit_scale * contextual_IC_feature[i, :, :] @ contextual_sen3ofsection_feature[i, :, :].T
             mask_new = mask_section[i].unsqueeze(0)
+            cos_score1 = cos_score1 * mask_new
+            cos_score2 = cos_score2 * mask_new
+            cos_score3 = cos_score3 * mask_new
 
-            #logits_per_image11 = tmp1 * mask_new
-            logits_per_image22 = tmp2 * mask_new
+            # "Max" Strategy in our paper
+            Max_cos_score = torch.maximum(cos_score1, cos_score2)
+            Max_cos_score = torch.maximum(Max_cos_score, cos_score3)
+            Cos_score_list.append(Max_cos_score)
 
-            #logits_per_image12 = tmp11 * mask_new
-            logits_per_image23 = tmp21 * mask_new
-
-            #logits_per_image13 = tmp12 * mask_new
-            logits_per_image24 = tmp22 * mask_new
-            # logits_per_image1 = logits_per_image11
-            # a = self.dropout(self.relu(self.line1(torch.cat([image_features1[i, :, :], caption_features1[i, :, :]], dim=1))))
-            # logits_per_image_v = a * logits_per_image11 + (1-a) * logits_per_image22
-            # logits_per_image_v = logits_per_image22
-            #logits_per_image_v = torch.maximum(logits_per_image11, logits_per_image22)
-            #logits_per_image_v_tmp1 = torch.maximum(logits_per_image11, logits_per_image12)
-            #logits_per_image_v_tmp2 = torch.maximum(logits_per_image_v_tmp1, logits_per_image13)
-
-            logits_per_image_t_tmp1 = torch.maximum(logits_per_image22, logits_per_image23)
-            logits_per_image_t_tmp2 = torch.maximum(logits_per_image_t_tmp1, logits_per_image24)
-            #logits_per_image_t_tmp2 = logits_per_image22
-            #logits_per_image_v = torch.maximum(logits_per_image_v_tmp2, logits_per_image_t_tmp2)
-            logits_per_image_v = logits_per_image_t_tmp2
-            # logits_per_image_v = 0.5 * logits_per_image11 + 0.5 * logits_per_image22
-
-            # print(logits_per_image_v.size())
-            # logits_per_image_v = logits_per_image11
-
-            logits_per_image1_new.append(logits_per_image_v)
-
-        logits_per_image1 = torch.cat(logits_per_image1_new, dim=0)
-        # logits_per_image1 = torch.maximum(logits_per_image1, max_score1)
-        # print('logits_per_image1:', logits_per_image1.size())
-        # print('labels:', labels.size())
-        # print('max_score:', max_score1.size())
-        loss = (F.cross_entropy(logits_per_image1, labels))
+        prediction_score = torch.cat(Cos_score_list, dim=0)
+        
+        
+        # Contrastive Learning Loss
+        labels = secid
+        total_loss = 0
+        loss = (F.cross_entropy(prediction_score, labels))
         total_loss = total_loss + loss
 
-        # calculate prediction result
-        ranking = torch.argsort(logits_per_image1, descending=True, dim=1)
+        # calculate prediction evaluation metirc: R@1 and R@3
+        R1, R3 = 0, 0
+        #ranking the prediction score
+        ranking = torch.argsort(prediction_score, descending=True, dim=1)
         ground_truth = labels.reshape(labels.size(0), 1)
+        #compare with groundtruth
         preds = torch.where(ranking == ground_truth)[1]
         preds = preds.detach().cpu().numpy()
-        metrics1 += np.sum(preds < 1)
-        metrics3 += np.sum(preds < 3)
-        num_of_image1 = len(preds)
-        num_of_image += num_of_image1
-        return total_loss, metrics1, metrics3, num_of_image, ranking.detach().cpu().numpy(), ground_truth.detach().cpu().numpy()
+        # calculate R@1 and R@3
+        R1 += np.sum(preds < 1)
+        R3 += np.sum(preds < 3)
+        num_of_image += len(preds)
+        
+        return total_loss, R1, R3, num_of_image, ranking.detach().cpu().numpy(), ground_truth.detach().cpu().numpy()
 
