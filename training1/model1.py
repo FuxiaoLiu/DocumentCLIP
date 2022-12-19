@@ -226,33 +226,23 @@ class Gated_Embedding_Unit(nn.Module):
 class Fuxiao(nn.Module):
     def __init__(self, input_size, output_size):
         super().__init__()
-        self.line1 = nn.Linear(1024, 1)
-        self.line2 = nn.Linear(1024, 512)
-        self.line3 = nn.Linear(512, 1)
-        self.line4 = nn.Linear(1536, 512)
-        self.line5 = nn.Linear(1536, 512)
         self.dropout = nn.Dropout(p=0.1)
         self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
         self.gelu = nn.GELU()
         self.sigmoid = nn.Sigmoid()
         self.softmax = nn.Softmax(dim=1)
-        self.encoder1 = Encoder(512, 512, 1, 8, 512, 0.1)
         self.encoder_image = Encoder(512, 512, 1, 8, 512, 0.1)
         self.encoder_caption = Encoder(512, 512, 1, 8, 512, 0.1)
         self.encoder_earlyfusion = Encoder(512, 512, 1, 8, 512, 0.1)
         self.encoder_sentence = Encoder(512, 512, 1, 8, 512, 0.1)
         self.layout_transformer = Encoder(512, 512, 1, 8, 512, 0.1)
-        # self.lstm = nn.LSTM(512, 512, batch_first=True, bidirectional=True)
         self.lstm = nn.LSTM(512, 512, batch_first=True, bidirectional=False, dropout=0.1)
-        self.lstm1 = nn.LSTM(512, 512, batch_first=True, bidirectional=False, dropout=0.1)
         self.pos_embedding = nn.Embedding(15, 512)
         self.type_embedding = nn.Embedding(3, 512)
         self.loss = nn.BCEWithLogitsLoss()
         self.cls_embedding = nn.Embedding(1, 512)
         self.count_embedding = nn.Embedding(16, 512)
-        self.count_embedding1 = nn.Embedding(16, 512)
-        self.cos = nn.CosineSimilarity(dim=1, eps=1e-6)
 
 
     def forward(self, image_features, caption_features, section_sen1, section_sen2, section_sen3, count_list_entity, max_score_clip, secid, imageid, mask_section, logit_scale):
@@ -371,7 +361,6 @@ class Fuxiao(nn.Module):
             Cos_score_list.append(Max_cos_score)
 
         prediction_score = torch.cat(Cos_score_list, dim=0)
-        
         
         # Contrastive Learning Loss
         labels = secid
