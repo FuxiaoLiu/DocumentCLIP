@@ -1,7 +1,27 @@
 # DocumentCLIP: Linking Figures and Main Body Text in Reflowed Documents
 Fuxiao Liu, Hao Tan, Chris Tensmeyer
 
-In this work, we apply the contrastive learning algorithm to determine the document-internal connections between specific figures and body Text. Our model can be applied to Adobe Liquid mode to improve the reading experience on the smartphone.
+Vision-language pretraining models have achieved great
+success in supporting multimedia applications by under-
+standing the alignments between images and text. While
+existing vision-language pretraining models primarily focus
+on understanding single image associated with a single piece
+of text, they often ignore the alignment at the intra-document
+level, consisting of multiple sentences with multiple images.
+In this work, we propose DocumentCLIP, a salience-aware
+contrastive learning framework to enforce vision-language
+pretraining models to comprehend the interaction between
+images and longer text within documents. Our model is bene-
+ficial for the real-world multimodal document understanding
+like news article, magazines, product descriptions, which
+contain linguistically and visually richer content. To the
+best of our knowledge, we are the first to explore multimodal
+intra-document links by contrastive learning. In addition, we
+collect a large Wikipedia dataset for pretraining, which pro-
+vides various topics and structures. Experiments show Docu-
+mentCLIP not only outperforms the state-of-the-art baselines
+in the supervised setting, but also achieves the best zero-shot
+performance in the wild after human evaluation.
 
 Model Preview:
 ![DocumentCLIP Model!](./model.png)
