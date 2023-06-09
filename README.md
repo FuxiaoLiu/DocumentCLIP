@@ -23,7 +23,7 @@ mentCLIP not only outperforms the state-of-the-art baselines
 in the supervised setting, but also achieves the best zero-shot
 performance in the wild after human evaluation.
 
-Model Preview:
+## Model Preview:
 ![DocumentCLIP Model!](./model.png)
 
 ## Requirements
