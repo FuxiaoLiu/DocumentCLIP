@@ -1,5 +1,5 @@
 # DocumentCLIP: Linking Figures and Main Body Text in Reflowed Documents
-Fuxiao Liu, Chris Tensmeyer, Hao Tan
+Fuxiao Liu, Hao Tan, Chris Tensmeyer
 
 In this work, we apply the contrastive learning algorithm to determine the document-internal connections between specific figures and body Text. Our model can be applied to Adobe Liquid mode to improve the reading experience on the smartphone.
 
