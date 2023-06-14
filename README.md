@@ -81,7 +81,14 @@ The checkpoint of our model will be shared upon request. please email: fl3es@umd
 ### Experiment Results
 ![DocumentCLIP dataset!](./experiment.png)
 
-## Notice
-This repository and tool are licensed under [Apache 2.0](./LICENSE). 
+## Citing
+If you find our paper/code useful, please consider citing:
 
-<a name="footnote1">1</a>: Wikimedia Wordmark is a trademark of the Wikimedia Foundation and is used with the permission of the Wikimedia Foundation. We are not endorsed by or affiliated with the Wikimedia Foundation.
+```
+@article{liu2023documentclip,
+  title={DocumentCLIP: Linking Figures and Main Body Text in Reflowed Documents},
+  author={Liu, Fuxiao and Tan, Hao and Tensmeyer, Chris},
+  journal={arXiv preprint arXiv:2306.06306},
+  year={2023}
+}
+```
