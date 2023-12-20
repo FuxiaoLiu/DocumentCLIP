@@ -11,8 +11,7 @@ If you find our paper/code useful, please consider citing:
   journal={arXiv preprint arXiv:2306.06306},
   year={2023}
 }
-
-
+```
 Vision-language pretraining models have achieved great
 success in supporting multimedia applications by under-
 standing the alignments between images and text. While
