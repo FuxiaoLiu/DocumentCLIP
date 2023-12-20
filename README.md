@@ -1,6 +1,18 @@
 # DocumentCLIP: Linking Figures and Main Body Text in Reflowed Documents
 Fuxiao Liu, Hao Tan, Chris Tensmeyer
 
+## Citing
+If you find our paper/code useful, please consider citing:
+
+```
+@article{liu2023documentclip,
+  title={DocumentCLIP: Linking Figures and Main Body Text in Reflowed Documents},
+  author={Liu, Fuxiao and Tan, Hao and Tensmeyer, Chris},
+  journal={arXiv preprint arXiv:2306.06306},
+  year={2023}
+}
+
+
 Vision-language pretraining models have achieved great
 success in supporting multimedia applications by under-
 standing the alignments between images and text. While
@@ -81,14 +93,4 @@ The checkpoint of our model will be shared upon request. please email: fl3es@umd
 ### Experiment Results
 ![DocumentCLIP dataset!](./experiment.png)
 
-## Citing
-If you find our paper/code useful, please consider citing:
-
-```
-@article{liu2023documentclip,
-  title={DocumentCLIP: Linking Figures and Main Body Text in Reflowed Documents},
-  author={Liu, Fuxiao and Tan, Hao and Tensmeyer, Chris},
-  journal={arXiv preprint arXiv:2306.06306},
-  year={2023}
-}
 ```
