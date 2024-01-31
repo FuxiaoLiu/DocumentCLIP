@@ -1,4 +1,4 @@
-# DocumentCLIP: Linking Figures and Main Body Text in Reflowed Documents
+# DocumentCLIP: Linking Figures and Main Body Text in Reflowed Documents[ICLRAI'23]
 Fuxiao Liu, Hao Tan, Chris Tensmeyer
 
 ## Citing
