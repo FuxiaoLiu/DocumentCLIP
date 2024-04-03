@@ -1,4 +1,4 @@
-# DocumentCLIP: Linking Figures and Main Body Text in Reflowed Documents [ICPRAI 2024](https://brain.korea.ac.kr/icprai2024/registration.php)
+# DocumentCLIP: Linking Figures and Main Body Text in Reflowed Documents [[ICPRAI 2024]](https://brain.korea.ac.kr/icprai2024/registration.php)
 Fuxiao Liu, Hao Tan, Chris Tensmeyer
 
 ## Citing
