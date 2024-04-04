@@ -88,6 +88,9 @@ torchrun --nproc_per_node=4 --rdzv_endpoint=$HOSTE_NODE_ADDR -m training1.main \
 ```
 ### Inference
 The checkpoint of our model will be shared upon request. please email: fl3es@umd.edu.
+```
+https://drive.google.com/file/d/1jL85OZbyy2NMzxwNZrL5v6ubQn5si3SG/view?usp=sharing
+```
 
 ### Experiment Results
 ![DocumentCLIP dataset!](./experiment.png)
